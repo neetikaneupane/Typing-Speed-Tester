@@ -14,8 +14,10 @@ It also saves your **high score** locally in your browser.
 - Export your results as a `.json` file.
 - Responsive layout (works on mobile and desktop).
 
-<img width="1534" height="760" alt="image" src="https://github.com/user-attachments/assets/74ea2207-5218-4fee-ba43-a56dd4eac70e" />
-<img width="1397" height="688" alt="image" src="https://github.com/user-attachments/assets/abe37316-5d00-4209-8731-180a1fa24e37" />
+<img width="1197" height="745" alt="image" src="https://github.com/user-attachments/assets/6df5f1fd-3e6d-4695-a966-703223c459b8" />
+
+<img width="1173" height="727" alt="image" src="https://github.com/user-attachments/assets/9f4e26ec-546e-4a69-a031-1d01333e7e7d" />
+
 
 You can directly visit through https://neetikaneupane.github.io/Typing-Speed-Tester/
 
