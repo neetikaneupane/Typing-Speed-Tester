@@ -1,11 +1,11 @@
-// --- data ---
+
 const wordPools = {
   easy: `the quick brown fox jumps over the lazy dog this is a simple typing test practice makes perfect keep going`.split(' '),
   medium: (`javascript function variable object array string keyboard timer accuracy speed challenge practice random sentence typing game rapid focus`).split(' '),
   hard: (`synthesis asynchronous juxtaposition paradigm ubiquitous ephemeral obfuscate dichotomy quintessence algorithmic heterogenous quintessential`).split(' ')
 };
 
-// --- ui ---
+
 const promptEl = document.getElementById('prompt');
 const inputEl = document.getElementById('textInput');
 const startBtn = document.getElementById('startBtn');
@@ -23,7 +23,7 @@ const errorsEl = document.getElementById('errors');
 const highScoreEl = document.getElementById('highScore');
 const downloadBtn = document.getElementById('downloadBtn');
 
-// --- state ---
+
 let words = [];
 let currentIndex = 0;
 let timer = null;
@@ -41,7 +41,6 @@ function loadHighScore() {
   highScoreEl.textContent = v;
 }
 
-// generate a prompt using the pool
 function generateWords(difficulty = 'medium', amount = 30) {
   const pool = wordPools[difficulty] || wordPools.medium;
   const arr = [];
@@ -59,7 +58,7 @@ function renderPrompt() {
     if (i === currentIndex) span.style.textDecoration = 'underline';
     promptEl.appendChild(span);
   });
-  // scroll to current word if overflow
+ 
   const curr = promptEl.querySelectorAll('.word')[currentIndex];
   if (curr) curr.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 }
@@ -126,24 +125,19 @@ function updateMetrics(final = false) {
   errorsEl.textContent = errorCount;
 }
 
-// handle input
+
 inputEl.addEventListener('input', (e) => {
   const val = e.target.value;
   if (!running) return;
-  // compare to current word
+  
   const target = words[currentIndex] || '';
   totalTyped += 1; // count keystroke
-  // count correct chars so far in this word
+ 
   let correctSoFar = 0;
   for (let i = 0; i < val.length; i++) if (val[i] === target[i]) correctSoFar++;
-  // errors in this keystroke
+  
   const errorsNow = val.length - correctSoFar;
-  // compute delta from previous word state by storing per-word typed? Simpler: recalc correctChars by scanning all typed words tracked.
 
-  // We'll approximate: add correctSoFar difference and error difference.
-  // For simplicity maintain correctChars as sum of lengths of all fully correct words plus correctSoFar for current.
-
-  // update display of current word color
   const spans = promptEl.querySelectorAll('.word');
   spans.forEach((s, idx) => {
     s.classList.remove('incorrect');
@@ -152,7 +146,7 @@ inputEl.addEventListener('input', (e) => {
     if (idx < currentIndex) s.classList.add('correct');
     if (idx === currentIndex) s.style.textDecoration = 'underline';
   });
-  // highlight current letter by rebuilding the current word span
+ 
   const currSpan = spans[currentIndex];
   if (currSpan) {
     const frag = document.createDocumentFragment();
@@ -165,14 +159,14 @@ inputEl.addEventListener('input', (e) => {
       else chSpan.style.color = '#fb7185';
       frag.appendChild(chSpan);
     }
-    // replace text
+    
     currSpan.innerHTML = '';
     currSpan.appendChild(frag);
   }
 
 });
 
-// handle space or enter to finish word
+
 inputEl.addEventListener('keydown', (e) => {
   if (e.key === ' ' || e.key === 'Enter') {
     e.preventDefault();
@@ -187,7 +181,7 @@ inputEl.addEventListener('keydown', (e) => {
       if (a === b) correctChars++;
       else errorCount++;
     }
-    // mark word correct if exact
+    
     if (typed === target) {
       const spans = promptEl.querySelectorAll('.word');
       if (spans[currentIndex]) spans[currentIndex].classList.add('correct');
@@ -258,14 +252,14 @@ downloadBtn.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-// initial setup
+
 words = generateWords(difficultySelect.value, 40);
 timeLeft = parseInt(timeSelect.value, 10);
 renderPrompt();
 resetStats();
 loadHighScore();
 
-// keyboard shortcut: Enter to start if not running
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !running) { startGame(); }
 });

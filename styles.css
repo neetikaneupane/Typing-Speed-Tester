@@ -163,3 +163,9 @@ footer {
     order: 1;
   }
 }
+
+option {
+  background: var(--card);
+  color: #e6eef8;
+  
+}
