@@ -263,3 +263,33 @@ loadHighScore();
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !running) { startGame(); }
 });
+
+window.onload = () => {
+  google.accounts.id.initialize({
+    client_id: "854267863083-8h9022a990imjsvj5dfa1sfl2ahh6p4a.apps.googleusercontent.com",
+    callback: handleCredentialResponse
+  });
+  google.accounts.id.renderButton(
+    document.getElementById("g_id_signin"),
+    {
+      theme: "outline", // or 'filled_blue'
+      size: "large",
+      shape: "pill",
+      width: "240"      // makes it responsive if you set width in CSS
+    }
+  );
+  google.accounts.id.prompt(); // optional: one-tap prompt
+};
+
+function handleCredentialResponse(response) {
+  // The ID token you get:
+  const idToken = response.credential;
+
+  // Decode or send to your server:
+  const payload = JSON.parse(atob(idToken.split('.')[1]));
+  console.log("Signed in as:", payload.name, payload.email);
+
+  // Example: show the user’s name in the UI
+  const header = document.querySelector('header h1');
+  header.textContent = `Welcome, ${payload.given_name}!`;
+}

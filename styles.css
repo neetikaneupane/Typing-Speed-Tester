@@ -169,3 +169,14 @@ option {
   color: #e6eef8;
   
 }
+#g_id_signin {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  background-color: var(--card);
+}
+@media (max-width: 600px){
+  #g_id_signin {
+    justify-content: center;
+  }
+}
