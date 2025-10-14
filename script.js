@@ -1,10 +1,26 @@
-
-const wordPools = {
-  easy: `the quick brown fox jumps over the lazy dog this is a simple typing test practice makes perfect keep going`.split(' '),
-  medium: (`javascript function variable object array string keyboard timer accuracy speed challenge practice random sentence typing game rapid focus`).split(' '),
-  hard: (`synthesis asynchronous juxtaposition paradigm ubiquitous ephemeral obfuscate dichotomy quintessence algorithmic heterogenous quintessential`).split(' ')
+const paragraphPools = {
+  easy: [
+    "The quick brown fox jumps over the lazy dog. This is a simple typing test that will help you practice your skills. Keep going and you will see improvement over time.",
+    "Practice makes perfect in everything you do. The more you type, the faster and more accurate you will become. Remember to focus on accuracy first, then speed will follow naturally.",
+    "Learning to type well is an important skill in today's world. Many jobs require good typing abilities. Take your time and focus on building good habits from the start.",
+    "Typing tests help you track your progress over time. You can see your speed improve with each practice session. Stay motivated and keep practicing every day for best results.",
+    "The key to success is consistent practice and patience. Do not rush through the exercises. Take breaks when you feel tired and come back refreshed."
+  ],
+  medium: [
+    "JavaScript is a versatile programming language used for web development. It allows developers to create dynamic and interactive websites. Modern applications rely heavily on JavaScript frameworks and libraries to function efficiently.",
+    "Functions are fundamental building blocks in programming. They help organize code into reusable pieces that can be called multiple times. Understanding functions is essential for writing clean and maintainable code in any language.",
+    "Variables store data that can be accessed and modified throughout your program. Choosing descriptive variable names makes your code easier to understand. Good naming conventions are crucial for collaborative development projects.",
+    "Arrays and objects are essential data structures in JavaScript. They allow you to store and manipulate collections of data efficiently. Mastering these concepts will significantly improve your programming capabilities and problem-solving skills.",
+    "Practice coding challenges regularly to sharpen your skills. The more problems you solve, the better you become at recognizing patterns. Challenge yourself with increasingly difficult tasks to accelerate your learning journey."
+  ],
+  hard: [
+    "Asynchronous programming paradigms facilitate concurrent operations without blocking execution threads. Understanding the event loop mechanism is quintessential for developing sophisticated applications that require optimal performance and responsiveness.",
+    "The juxtaposition of various algorithmic approaches reveals the inherent complexity of computational problems. Ephemeral data structures provide temporary storage solutions while maintaining efficiency. Obfuscation techniques often obscure the underlying implementation details.",
+    "Heterogeneous systems present unique challenges in distributed computing environments. The quintessence of robust architecture lies in anticipating failure modes and implementing comprehensive error handling strategies throughout the application lifecycle.",
+    "Synthesis of disparate methodologies enables innovative solutions to intractable problems. Ubiquitous connectivity has fundamentally transformed how we approach software design. The dichotomy between theoretical elegance and practical implementation remains ever-present.",
+    "Paradigm shifts in technology necessitate continuous adaptation and learning. Quintessential principles of computer science transcend specific languages or frameworks. Understanding fundamental concepts provides a solid foundation for tackling any technical challenge."
+  ]
 };
-
 
 const promptEl = document.getElementById('prompt');
 const inputEl = document.getElementById('textInput');
@@ -23,8 +39,7 @@ const errorsEl = document.getElementById('errors');
 const highScoreEl = document.getElementById('highScore');
 const downloadBtn = document.getElementById('downloadBtn');
 
-
-let words = [];
+let currentText = '';
 let currentIndex = 0;
 let timer = null;
 let timeLeft = parseInt(timeSelect.value, 10);
@@ -33,40 +48,51 @@ let totalTyped = 0;
 let correctChars = 0;
 let errorCount = 0;
 let startTime = null;
+let errorPositions = new Set();
 
-const HIGH_SCORE_KEY = 'typing_high_score_v1';
+const HIGH_SCORE_KEY = 'typing_high_score_v2';
 
 function loadHighScore() {
-  const v = localStorage.getItem(HIGH_SCORE_KEY) || '0';
+  const v = parseInt(highScoreEl.textContent, 10) || 0;
   highScoreEl.textContent = v;
 }
 
-function generateWords(difficulty = 'medium', amount = 30) {
-  const pool = wordPools[difficulty] || wordPools.medium;
-  const arr = [];
-  for (let i = 0; i < amount; i++) arr.push(pool[Math.floor(Math.random() * pool.length)]);
-  return arr;
+function getRandomParagraph(difficulty = 'medium') {
+  const pool = paragraphPools[difficulty] || paragraphPools.medium;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function renderPrompt() {
   promptEl.innerHTML = '';
-  words.forEach((w, i) => {
+  for (let i = 0; i < currentText.length; i++) {
     const span = document.createElement('span');
-    span.className = 'word';
-    span.textContent = w + (i < words.length - 1 ? ' ' : '');
-    if (i < currentIndex) span.classList.add('correct');
-    if (i === currentIndex) span.style.textDecoration = 'underline';
+    span.textContent = currentText[i];
+    span.className = 'char';
+    
+    if (i < currentIndex) {
+      span.classList.add('typed');
+      if (errorPositions.has(i)) {
+        span.style.textDecoration = 'underline';
+        span.style.textDecorationColor = '#ef4444';
+        span.style.textDecorationThickness = '2px';
+        span.style.color = '#ef4444';
+      } else {
+        span.style.color = '#86efac';
+      }
+    } else if (i === currentIndex) {
+      span.style.backgroundColor = '#3b82f6';
+      span.style.color = 'white';
+    }
+    
     promptEl.appendChild(span);
-  });
- 
-  const curr = promptEl.querySelectorAll('.word')[currentIndex];
-  if (curr) curr.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }
 }
 
 function resetStats() {
   totalTyped = 0;
   correctChars = 0;
   errorCount = 0;
+  errorPositions.clear();
   wpmEl.textContent = '0';
   accuracyEl.textContent = '100%';
   charsTypedEl.textContent = '0';
@@ -80,10 +106,13 @@ function startGame() {
   timeLeft = parseInt(timeSelect.value, 10);
   timeLeftEl.textContent = timeLeft;
   resetStats();
+  currentIndex = 0;
   startBtn.textContent = 'Running...';
   inputEl.disabled = false;
+  inputEl.value = '';
   inputEl.focus();
   startTime = Date.now();
+  renderPrompt();
 
   timer = setInterval(() => {
     timeLeft--;
@@ -106,9 +135,8 @@ function stopGame() {
 
 function saveHighScore() {
   const currentWpm = parseInt(wpmEl.textContent, 10) || 0;
-  const prev = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10);
+  const prev = parseInt(highScoreEl.textContent, 10) || 0;
   if (currentWpm > prev) {
-    localStorage.setItem(HIGH_SCORE_KEY, currentWpm);
     highScoreEl.textContent = currentWpm;
     alert('New high score! ' + currentWpm + ' WPM');
   }
@@ -125,72 +153,48 @@ function updateMetrics(final = false) {
   errorsEl.textContent = errorCount;
 }
 
-
 inputEl.addEventListener('input', (e) => {
-  const val = e.target.value;
   if (!running) return;
   
-  const target = words[currentIndex] || '';
-  totalTyped += 1; // count keystroke
- 
-  let correctSoFar = 0;
-  for (let i = 0; i < val.length; i++) if (val[i] === target[i]) correctSoFar++;
-  
-  const errorsNow = val.length - correctSoFar;
-
-  const spans = promptEl.querySelectorAll('.word');
-  spans.forEach((s, idx) => {
-    s.classList.remove('incorrect');
-    s.classList.remove('correct');
-    s.style.textDecoration = '';
-    if (idx < currentIndex) s.classList.add('correct');
-    if (idx === currentIndex) s.style.textDecoration = 'underline';
-  });
- 
-  const currSpan = spans[currentIndex];
-  if (currSpan) {
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < target.length; i++) {
-      const chSpan = document.createElement('span');
-      const typedChar = val[i];
-      chSpan.textContent = target[i];
-      if (typedChar == null) { /* untouched */ }
-      else if (typedChar === target[i]) chSpan.style.color = '#86efac';
-      else chSpan.style.color = '#fb7185';
-      frag.appendChild(chSpan);
+  const typedChar = e.data;
+  if (typedChar && currentIndex < currentText.length) {
+    const expectedChar = currentText[currentIndex];
+    totalTyped++;
+    
+    if (typedChar === expectedChar) {
+      correctChars++;
+    } else {
+      errorCount++;
+      errorPositions.add(currentIndex);
     }
     
-    currSpan.innerHTML = '';
-    currSpan.appendChild(frag);
+    currentIndex++;
+    renderPrompt();
+    updateMetrics();
+    
+    if (currentIndex >= currentText.length) {
+      stopGame();
+    }
   }
-
+  
+  inputEl.value = '';
 });
 
-
 inputEl.addEventListener('keydown', (e) => {
-  if (e.key === ' ' || e.key === 'Enter') {
+  if (e.key === 'Backspace') {
     e.preventDefault();
-    if (!running) return;
-    const typed = inputEl.value.trim();
-    const target = words[currentIndex] || '';
-    // count correct chars for this word
-    for (let i = 0; i < Math.max(typed.length, target.length); i++) {
-      const a = typed[i] || '';
-      const b = target[i] || '';
-      totalTyped++;
-      if (a === b) correctChars++;
-      else errorCount++;
+    if (!running || currentIndex === 0) return;
+    
+    currentIndex--;
+    if (!errorPositions.has(currentIndex)) {
+      totalTyped--;
+      correctChars--;
+    } else {
+      totalTyped--;
+      errorCount--;
+      errorPositions.delete(currentIndex);
     }
     
-    if (typed === target) {
-      const spans = promptEl.querySelectorAll('.word');
-      if (spans[currentIndex]) spans[currentIndex].classList.add('correct');
-    } else {
-      const spans = promptEl.querySelectorAll('.word');
-      if (spans[currentIndex]) spans[currentIndex].classList.add('incorrect');
-    }
-    currentIndex++;
-    inputEl.value = '';
     renderPrompt();
     updateMetrics();
   }
@@ -198,25 +202,37 @@ inputEl.addEventListener('keydown', (e) => {
 
 skipBtn.addEventListener('click', () => {
   if (!running) return;
-  currentIndex++;
-  inputEl.value = '';
-  renderPrompt();
+  if (currentIndex < currentText.length) {
+    errorPositions.add(currentIndex);
+    errorCount++;
+    totalTyped++;
+    currentIndex++;
+    renderPrompt();
+    updateMetrics();
+  }
 });
 
 newPromptBtn.addEventListener('click', () => {
-  words = generateWords(difficultySelect.value, 40);
+  currentText = getRandomParagraph(difficultySelect.value);
   currentIndex = 0;
+  errorPositions.clear();
+  inputEl.value = '';
   renderPrompt();
+  if (running) {
+    stopGame();
+  }
 });
 
 startBtn.addEventListener('click', () => startGame());
+
 resetBtn.addEventListener('click', () => {
   clearInterval(timer);
   running = false;
   inputEl.disabled = true;
   inputEl.value = '';
   currentIndex = 0;
-  words = generateWords(difficultySelect.value, 40);
+  errorPositions.clear();
+  currentText = getRandomParagraph(difficultySelect.value);
   timeLeft = parseInt(timeSelect.value, 10);
   timeLeftEl.textContent = timeLeft;
   startBtn.textContent = 'Start';
@@ -225,10 +241,14 @@ resetBtn.addEventListener('click', () => {
 });
 
 difficultySelect.addEventListener('change', () => {
-  words = generateWords(difficultySelect.value, 40);
+  currentText = getRandomParagraph(difficultySelect.value);
   currentIndex = 0;
+  errorPositions.clear();
   inputEl.value = '';
   renderPrompt();
+  if (running) {
+    stopGame();
+  }
 });
 
 timeSelect.addEventListener('change', () => {
@@ -241,6 +261,7 @@ downloadBtn.addEventListener('click', () => {
     wpm: wpmEl.textContent,
     accuracy: accuracyEl.textContent,
     time: timeSelect.value,
+    errors: errorCount,
     date: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -252,15 +273,12 @@ downloadBtn.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-
-words = generateWords(difficultySelect.value, 40);
+currentText = getRandomParagraph(difficultySelect.value);
 timeLeft = parseInt(timeSelect.value, 10);
 renderPrompt();
 resetStats();
 loadHighScore();
 
-
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !running) { startGame(); }
 });
-
