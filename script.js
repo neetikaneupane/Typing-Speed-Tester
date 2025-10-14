@@ -51,8 +51,15 @@ let errorPositions = new Set();
 const HIGH_SCORE_KEY = 'typing_high_score_v2';
 
 function loadHighScore() {
-  const v = parseInt(highScoreEl.textContent, 10) || 0;
-  highScoreEl.textContent = v;
+  try {
+    const saved = localStorage.getItem(HIGH_SCORE_KEY);
+    const score = saved ? parseInt(saved, 10) : 0;
+    highScoreEl.textContent = score;
+    return score;
+  } catch (e) {
+    highScoreEl.textContent = '0';
+    return 0;
+  }
 }
 
 function getRandomParagraph(difficulty = 'medium') {
@@ -129,10 +136,16 @@ function stopGame() {
 
 function saveHighScore() {
   const currentWpm = parseInt(wpmEl.textContent, 10) || 0;
-  const prev = parseInt(highScoreEl.textContent, 10) || 0;
-  if (currentWpm > prev) {
-    highScoreEl.textContent = currentWpm;
-    alert('New high score! ' + currentWpm + ' WPM');
+  try {
+    const prev = localStorage.getItem(HIGH_SCORE_KEY);
+    const prevScore = prev ? parseInt(prev, 10) : 0;
+    if (currentWpm > prevScore) {
+      localStorage.setItem(HIGH_SCORE_KEY, currentWpm.toString());
+      highScoreEl.textContent = currentWpm;
+      alert('New high score! ' + currentWpm + ' WPM');
+    }
+  } catch (e) {
+    console.error('Could not save high score:', e);
   }
 }
 
