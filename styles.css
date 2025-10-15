@@ -201,3 +201,17 @@ main {
 #reset-btn:hover {
   background: #0f2342;
 }
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: #00aaff;
+  vertical-align: bottom;
+  animation: blink 1s step-end infinite;
+  margin-right: -1px;
+}
+
+@keyframes blink {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
+}
