@@ -25,11 +25,6 @@ You can try the live version here:
 
 ## 📁 Project Structure
 Typing-Speed-Tester/
-├── index.html
-├── script.js
-├── styles.css
-└── README.md
-
 
 - **index.html** — Main markup and UI layout  
 - **styles.css** — Styling and responsive design  
