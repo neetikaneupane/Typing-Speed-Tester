@@ -127,5 +127,5 @@ function resetTest() {
 difficultySelect.addEventListener('change', resetTest);
 timeSelect.addEventListener('change', resetTest);
 
-// Initial load
+
 resetTest();
