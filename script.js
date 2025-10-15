@@ -1,4 +1,20 @@
-const paragraphPools = {
+const typingArea = document.getElementById('typing-text');
+const hiddenInput = document.getElementById('hidden-input');
+const wpmDisplay = document.getElementById('wpm');
+const accuracyDisplay = document.getElementById('accuracy');
+const timeDisplay = document.getElementById('time');
+const progressBar = document.getElementById('progress');
+const resetBtn = document.getElementById('reset-btn');
+const difficultySelect = document.getElementById('difficulty');
+const timeSelect = document.getElementById('time-select');
+
+let timeLimit = parseInt(timeSelect.value);
+let time = timeLimit;
+let timer = null;
+let started = false;
+let currentIndex = 0;
+
+const paragraphs = {
   easy: [
     "The quick brown fox jumps over the lazy dog. This is a simple typing test that will help you practice your skills. Keep going and you will see improvement over time. Practice makes perfect in everything you do. The more you type, the faster and more accurate you will become. Remember to focus on accuracy first, then speed will follow naturally. Stay focused and maintain a steady rhythm as you type each word carefully.",
     "Learning to type well is an important skill in today's world. Many jobs require good typing abilities. Take your time and focus on building good habits from the start. Typing tests help you track your progress over time. You can see your speed improve with each practice session. Stay motivated and keep practicing every day for best results. Consistency is the key to becoming a proficient typist.",
@@ -22,252 +38,94 @@ const paragraphPools = {
   ]
 };
 
-const promptEl = document.getElementById('prompt');
-const startBtn = document.getElementById('startBtn');
-const resetBtn = document.getElementById('resetBtn');
-const newPromptBtn = document.getElementById('newPromptBtn');
-const timeSelect = document.getElementById('timeSelect');
-const difficultySelect = document.getElementById('difficulty');
-const wpmEl = document.getElementById('wpm');
-const accuracyEl = document.getElementById('accuracy');
-const timeLeftEl = document.getElementById('timeLeft');
-const charsTypedEl = document.getElementById('charsTyped');
-const correctCharsEl = document.getElementById('correctChars');
-const errorsEl = document.getElementById('errors');
-const highScoreEl = document.getElementById('highScore');
-const downloadBtn = document.getElementById('downloadBtn');
-
-let currentText = '';
-let currentIndex = 0;
-let timer = null;
-let timeLeft = parseInt(timeSelect.value, 10);
-let running = false;
-let totalTyped = 0;
-let correctChars = 0;
-let errorCount = 0;
-let startTime = null;
-let errorPositions = new Set();
-
-const HIGH_SCORE_KEY = 'typing_high_score_v2';
-
-function loadHighScore() {
-  try {
-    const saved = localStorage.getItem(HIGH_SCORE_KEY);
-    const score = saved ? parseInt(saved, 10) : 0;
-    highScoreEl.textContent = score;
-    return score;
-  } catch (e) {
-    highScoreEl.textContent = '0';
-    return 0;
-  }
+function getRandomParagraph(level) {
+  const list = paragraphs[level];
+  return list[Math.floor(Math.random() * list.length)];
 }
 
-function getRandomParagraph(difficulty = 'medium') {
-  const pool = paragraphPools[difficulty] || paragraphPools.medium;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-function renderPrompt() {
-  promptEl.innerHTML = '';
-  for (let i = 0; i < currentText.length; i++) {
+function renderParagraph(text) {
+  typingArea.innerHTML = '';
+  text.split('').forEach(char => {
     const span = document.createElement('span');
-    span.textContent = currentText[i];
-    span.className = 'char';
-    
-    if (i < currentIndex) {
-      span.classList.add('typed');
-      if (errorPositions.has(i)) {
-        span.style.textDecoration = 'underline';
-        span.style.textDecorationColor = '#ef4444';
-        span.style.textDecorationThickness = '2px';
-        span.style.color = '#ef4444';
-      } else {
-        span.style.color = '#86efac';
-      }
-    } else if (i === currentIndex) {
-      span.style.backgroundColor = '#3b82f6';
-      span.style.color = 'white';
-    }
-    
-    promptEl.appendChild(span);
-  }
+    span.textContent = char;
+    span.classList.add('char');
+    typingArea.appendChild(span);
+  });
 }
 
-function resetStats() {
-  totalTyped = 0;
-  correctChars = 0;
-  errorCount = 0;
-  errorPositions.clear();
-  wpmEl.textContent = '0';
-  accuracyEl.textContent = '100%';
-  charsTypedEl.textContent = '0';
-  correctCharsEl.textContent = '0';
-  errorsEl.textContent = '0';
-}
-
-function startGame() {
-  if (running) return;
-  running = true;
-  timeLeft = parseInt(timeSelect.value, 10);
-  timeLeftEl.textContent = timeLeft;
-  resetStats();
-  currentIndex = 0;
-  startBtn.textContent = 'Running...';
-  startTime = Date.now();
-  renderPrompt();
-
+function startTimer() {
   timer = setInterval(() => {
-    timeLeft--;
-    timeLeftEl.textContent = timeLeft;
-    updateMetrics();
-    if (timeLeft <= 0) {
-      stopGame();
+    time--;
+    timeDisplay.textContent = `${time}s`;
+    progressBar.style.width = `${(time / timeLimit) * 100}%`;
+    if (time <= 0) {
+      clearInterval(timer);
+      hiddenInput.disabled = true;
     }
   }, 1000);
 }
 
-function stopGame() {
-  running = false;
-  clearInterval(timer);
-  startBtn.textContent = 'Start';
-  updateMetrics(true);
-  saveHighScore();
-}
+function updateTyping(inputValue) {
+  const characters = typingArea.querySelectorAll('span');
+  let correctCount = 0;
 
-function saveHighScore() {
-  const currentWpm = parseInt(wpmEl.textContent, 10) || 0;
-  try {
-    const prev = localStorage.getItem(HIGH_SCORE_KEY);
-    const prevScore = prev ? parseInt(prev, 10) : 0;
-    if (currentWpm > prevScore) {
-      localStorage.setItem(HIGH_SCORE_KEY, currentWpm.toString());
-      highScoreEl.textContent = currentWpm;
-      alert('New high score! ' + currentWpm + ' WPM');
-    }
-  } catch (e) {
-    console.error('Could not save high score:', e);
-  }
-}
+  for (let i = 0; i < characters.length; i++) {
+    const charSpan = characters[i];
+    const typedChar = inputValue[i];
 
-function updateMetrics(final = false) {
-  const minutes = (parseInt(timeSelect.value, 10) - timeLeft) / 60 || 1 / 60;
-  const wpm = minutes > 0 ? Math.round((correctChars / 5) / minutes) : 0;
-  wpmEl.textContent = final ? wpm : Math.max(0, wpm);
-  const acc = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
-  accuracyEl.textContent = acc + '%';
-  charsTypedEl.textContent = totalTyped;
-  correctCharsEl.textContent = correctChars;
-  errorsEl.textContent = errorCount;
-}
-
-document.addEventListener('keydown', (e) => {
-  if (!running) return;
-  
-  if (e.key === 'Backspace') {
-    e.preventDefault();
-    if (currentIndex === 0) return;
-    
-    currentIndex--;
-    if (!errorPositions.has(currentIndex)) {
-      totalTyped--;
-      correctChars--;
+    if (typedChar == null) {
+      charSpan.classList.remove('correct', 'incorrect');
+    } else if (typedChar === charSpan.textContent) {
+      charSpan.classList.add('correct');
+      charSpan.classList.remove('incorrect');
+      correctCount++;
     } else {
-      totalTyped--;
-      errorCount--;
-      errorPositions.delete(currentIndex);
-    }
-    
-    renderPrompt();
-    updateMetrics();
-    return;
-  }
-  
-  if (e.key.length === 1 && currentIndex < currentText.length) {
-    e.preventDefault();
-    const typedChar = e.key;
-    const expectedChar = currentText[currentIndex];
-    totalTyped++;
-    
-    if (typedChar === expectedChar) {
-      correctChars++;
-    } else {
-      errorCount++;
-      errorPositions.add(currentIndex);
-    }
-    
-    currentIndex++;
-    renderPrompt();
-    updateMetrics();
-    
-    if (currentIndex >= currentText.length) {
-      stopGame();
+      charSpan.classList.add('incorrect');
+      charSpan.classList.remove('correct');
     }
   }
+
+  const accuracy = inputValue.length > 0 ? (correctCount / inputValue.length) * 100 : 100;
+  accuracyDisplay.textContent = `${accuracy.toFixed(0)}%`;
+
+  const wordsTyped = inputValue.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const elapsed = timeLimit - time;
+  const wpm = elapsed > 0 ? (wordsTyped / elapsed) * 60 : 0;
+  wpmDisplay.textContent = Math.round(wpm);
+}
+
+hiddenInput.addEventListener('input', (e) => {
+  if (!started) {
+    startTimer();
+    started = true;
+  }
+  updateTyping(e.target.value);
 });
 
-newPromptBtn.addEventListener('click', () => {
-  currentText = getRandomParagraph(difficultySelect.value);
-  currentIndex = 0;
-  errorPositions.clear();
-  renderPrompt();
-  if (running) {
-    stopGame();
-  }
+typingArea.addEventListener('click', () => {
+  hiddenInput.focus();
 });
 
-startBtn.addEventListener('click', () => startGame());
+resetBtn.addEventListener('click', resetTest);
 
-resetBtn.addEventListener('click', () => {
+function resetTest() {
   clearInterval(timer);
-  running = false;
-  currentIndex = 0;
-  errorPositions.clear();
-  currentText = getRandomParagraph(difficultySelect.value);
-  timeLeft = parseInt(timeSelect.value, 10);
-  timeLeftEl.textContent = timeLeft;
-  startBtn.textContent = 'Start';
-  resetStats();
-  renderPrompt();
-});
+  timeLimit = parseInt(timeSelect.value);
+  time = timeLimit;
+  started = false;
+  hiddenInput.disabled = false;
+  hiddenInput.value = '';
+  wpmDisplay.textContent = '0';
+  accuracyDisplay.textContent = '100%';
+  timeDisplay.textContent = `${timeLimit}s`;
+  progressBar.style.width = '100%';
+  const level = difficultySelect.value;
+  const newParagraph = getRandomParagraph(level);
+  renderParagraph(newParagraph);
+}
 
-difficultySelect.addEventListener('change', () => {
-  currentText = getRandomParagraph(difficultySelect.value);
-  currentIndex = 0;
-  errorPositions.clear();
-  renderPrompt();
-  if (running) {
-    stopGame();
-  }
-});
+difficultySelect.addEventListener('change', resetTest);
+timeSelect.addEventListener('change', resetTest);
 
-timeSelect.addEventListener('change', () => {
-  timeLeft = parseInt(timeSelect.value, 10);
-  timeLeftEl.textContent = timeLeft;
-});
-
-downloadBtn.addEventListener('click', () => {
-  const data = {
-    wpm: wpmEl.textContent,
-    accuracy: accuracyEl.textContent,
-    time: timeSelect.value,
-    errors: errorCount,
-    date: new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'typing_result.json';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-currentText = getRandomParagraph(difficultySelect.value);
-timeLeft = parseInt(timeSelect.value, 10);
-renderPrompt();
-resetStats();
-loadHighScore();
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !running) { startGame(); }
-});
+// Initial load
+resetTest();
