@@ -13,6 +13,7 @@ let time = timeLimit;
 let timer = null;
 let started = false;
 let currentIndex = 0;
+let caretSpan = null;
 
 const paragraphs = {
   easy: [
@@ -51,6 +52,20 @@ function renderParagraph(text) {
     span.classList.add('char');
     typingArea.appendChild(span);
   });
+
+  // Create caret
+  caretSpan = document.createElement('span');
+  caretSpan.classList.add('caret');
+  typingArea.insertBefore(caretSpan, typingArea.firstChild);
+}
+
+function moveCaret(position) {
+  const chars = typingArea.querySelectorAll('.char');
+  if (position >= chars.length) {
+    typingArea.appendChild(caretSpan);
+  } else {
+    typingArea.insertBefore(caretSpan, chars[position]);
+  }
 }
 
 function startTimer() {
@@ -66,7 +81,7 @@ function startTimer() {
 }
 
 function updateTyping(inputValue) {
-  const characters = typingArea.querySelectorAll('span');
+  const characters = typingArea.querySelectorAll('span.char');
   let correctCount = 0;
 
   for (let i = 0; i < characters.length; i++) {
@@ -84,6 +99,9 @@ function updateTyping(inputValue) {
       charSpan.classList.remove('correct');
     }
   }
+
+  // Move the caret
+  moveCaret(inputValue.length);
 
   const accuracy = inputValue.length > 0 ? (correctCount / inputValue.length) * 100 : 100;
   accuracyDisplay.textContent = `${accuracy.toFixed(0)}%`;
@@ -126,6 +144,5 @@ function resetTest() {
 
 difficultySelect.addEventListener('change', resetTest);
 timeSelect.addEventListener('change', resetTest);
-
 
 resetTest();
