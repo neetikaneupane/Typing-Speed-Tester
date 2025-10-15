@@ -1,65 +1,69 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Typing Speed Test</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Typing Speed Test - Monkeytype Style</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" role="application">
-      <header>
-        <h1>Typing Speed Tester</h1>
-        <div class="controls">
-          <label class="small">Time:</label>
-          <select id="timeSelect">
-            <option value="15">15s</option>
-            <option value="30">30s</option>
-            <option value="60" selected>60s</option>
-            <option value="120">120s</option>
-          </select>
-          <button id="startBtn" class="primary">Start</button>
-          <button id="resetBtn">Reset</button>
-        </div>
-      </header>
-
-      <div class="layout">
-        <div>
-          <div class="prompt" id="prompt" aria-live="polite"></div>
-
-         
-
-          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button id="newPromptBtn">New Prompt</button>
-            <label class="small">Difficulty:</label>
-            <select id="difficulty">
-              <option value="easy">Easy</option>
-              <option value="medium" selected>Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
-        </div>
-
-        <aside class="stats">
-          <div class="stat"><div><strong id="wpm">0</strong><div class="small">WPM</div></div><div></div></div>
-          <div class="stat"><div><strong id="accuracy">100%</strong><div class="small">Accuracy</div></div></div>
-          <div class="stat"><div><strong id="timeLeft">60</strong><div class="small">Time left (s)</div></div></div>
-          <div class="stat"><div><strong id="charsTyped">0</strong><div class="small">Keystrokes</div></div></div>
-          <div class="stat"><div><strong id="correctChars">0</strong><div class="small">Correct chars</div></div></div>
-          <div class="stat"><div><strong id="errors">0</strong><div class="small">Errors</div></div></div>
-          <div style="padding-top:8px">
-            <div class="small">High score (WPM): <strong id="highScore">0</strong></div>
-            <div style="margin-top:8px" class="small">Tip: press <kbd>Enter</kbd> to skip word when playing.</div>
-          </div>
-        </aside>
-      </div>
-
-      <footer>
-        <div>Built with HTML/CSS/JS — Responsive & saves high score locally</div>
-        <div><button id="downloadBtn">Export Results</button></div>
-      </footer>
+    <header>
+  <div class="keyboard-logo">
+    <div class="key-row">
+      <div class="key"></div><div class="key"></div><div class="key"></div>
     </div>
+    <div class="key-row">
+      <div class="key"></div><div class="key"></div><div class="key"></div>
+    </div>
+    <div class="spacebar"></div>
+  </div>
+  <h1>Typespeed</h1>
+ </header>
+
+  <div class="container">
+    <div class="settings">
+      <div>
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div>
+        <label for="time-select">Time:</label>
+        <select id="time-select">
+          <option value="30">30s</option>
+          <option value="60" selected>60s</option>
+          <option value="120">120s</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="test-header">
+      <div class="metric">
+        <p>WPM</p>
+        <span id="wpm">0</span>
+      </div>
+      <div class="metric">
+        <p>Accuracy</p>
+        <span id="accuracy">100%</span>
+      </div>
+      <div class="metric">
+        <p>Time</p>
+        <span id="time">60s</span>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div id="progress"></div>
+    </div>
+
+    <div class="typing-area" id="typing-text"></div>
+
+    <input type="text" id="hidden-input" autofocus />
+
+    <button id="reset-btn" title="Restart Test">⟳</button>
   </div>
 
   <script src="script.js"></script>
